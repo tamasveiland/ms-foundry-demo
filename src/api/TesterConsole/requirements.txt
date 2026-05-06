@@ -1,0 +1,8 @@
+azure-ai-evaluation>=1.14.0
+azure-identity>=1.15.0
+openai>=1.12.0
+python-dotenv>=1.0.0
+pandas>=2.0.0
+azure-ai-projects>=2.0.0b3
+agent-framework-azure-ai>=1.0.0b260116
+azure-ai-agents>=1.2.0b5

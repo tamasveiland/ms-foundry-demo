@@ -5,6 +5,12 @@ infra:
   provider: bicep
   path: ./infra
 
+services:
+  agent-tools-api:
+    project: ./src/api/AgentToolsApi
+    language: csharp
+    host: appservice
+
 requiredVersions:
   extensions:
     # the azd ai agent extension is required for this template

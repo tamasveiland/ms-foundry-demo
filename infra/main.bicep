@@ -107,6 +107,48 @@ param existingApplicationInsightsResourceId string = ''
 @description('Optional. Name of an existing Application Insights connection on the Foundry project. If provided, no new App Insights or connection will be created.')
 param existingAppInsightsConnectionName string = ''
 
+@description('Enable App Service Plan and App Service deployment')
+param enableAppService bool = false
+
+@description('Enable API Management deployment')
+param enableApiManagement bool = false
+
+@description('App Service Plan SKU name')
+@allowed([
+  'B1'
+  'B2'
+  'B3'
+  'S1'
+  'S2'
+  'S3'
+  'P1V2'
+  'P2V2'
+  'P3V2'
+])
+param appServicePlanSkuName string = 'B1'
+
+@description('App Service Plan instance capacity')
+param appServicePlanCapacity int = 1
+
+@description('API Management Publisher Name')
+param apiManagementPublisherName string = 'API Administrator'
+
+@description('API Management Publisher Email')
+param apiManagementPublisherEmail string = 'admin@example.com'
+
+@description('API Management SKU')
+@allowed([
+  'Consumption'
+  'Developer'
+  'Basic'
+  'Standard'
+  'Premium'
+])
+param apiManagementSkuName string = 'Consumption'
+
+@description('API Management instance count (only for non-Consumption SKU)')
+param apiManagementSkuCount int = 1
+
 // Tags that should be applied to all resources.
 // 
 // Note that 'azd-service-name' tags should be applied separately to service host resources.
@@ -195,6 +237,54 @@ module acrForExistingProject 'core/host/acr.bicep' = if (shouldCreateAcrForExist
   }
 }
 
+// App Service Plan module
+var appServicePlanName = 'asp-${uniqueString(subscription().id, resourceGroupName, location)}'
+module appServicePlan 'core/host/appserviceplan.bicep' = if (enableAppService) {
+  scope: rg
+  name: 'appServicePlan'
+  params: {
+    location: location
+    tags: tags
+    resourceName: appServicePlanName
+    skuName: appServicePlanSkuName
+    capacity: appServicePlanCapacity
+  }
+}
+
+// App Service module
+var appServiceName = 'app-${uniqueString(subscription().id, resourceGroupName, location)}'
+var appInsightsConnectionString = useExistingAiProject ? existingAiProject.outputs.APPLICATIONINSIGHTS_CONNECTION_STRING : aiProject.outputs.APPLICATIONINSIGHTS_CONNECTION_STRING
+
+module appService 'core/host/appservice.bicep' = if (enableAppService) {
+  scope: rg
+  name: 'appService'
+  params: {
+    location: location
+    tags: tags
+    resourceName: appServiceName
+    serviceName: 'agent-tools-api'
+    appServicePlanId: enableAppService ? appServicePlan.outputs.appServicePlanId : ''
+    applicationInsightsConnectionString: appInsightsConnectionString
+    applicationInsightsInstrumentationKey: ''
+  }
+}
+
+// API Management module
+var apiManagementName = 'apim-${uniqueString(subscription().id, resourceGroupName, location)}'
+module apiManagement 'core/host/apim.bicep' = if (enableApiManagement) {
+  scope: rg
+  name: 'apiManagement'
+  params: {
+    location: location
+    tags: tags
+    resourceName: apiManagementName
+    publisherName: apiManagementPublisherName
+    publisherEmail: apiManagementPublisherEmail
+    skuName: apiManagementSkuName
+    skuCount: apiManagementSkuCount
+  }
+}
+
 // Resources
 output AZURE_RESOURCE_GROUP string = resourceGroupName
 output AZURE_AI_ACCOUNT_ID string = useExistingAiProject ? existingAiProject.outputs.accountId : aiProject.outputs.accountId
@@ -235,3 +325,13 @@ output AZURE_STORAGE_ACCOUNT_NAME string = useExistingAiProject ? existingAiProj
 
 // Connections
 output AI_PROJECT_CONNECTION_IDS_JSON string = useExistingAiProject ? string(existingAiProject.outputs.connectionIds) : string(aiProject.outputs.connectionIds)
+
+// App Service and API Management outputs
+output APPSERVICE_NAME string = enableAppService ? appService.outputs.appServiceName : ''
+output APPSERVICE_URI string = enableAppService ? appService.outputs.appServiceUri : ''
+output APPSERVICE_DEFAULT_HOST_NAME string = enableAppService ? appService.outputs.appServiceDefaultHostName : ''
+output APPSERVICEPLAN_NAME string = enableAppService ? appServicePlan.outputs.appServicePlanName : ''
+output APIMANAGEMENT_NAME string = enableApiManagement ? apiManagement.outputs.apiManagementName : ''
+output APIMANAGEMENT_GATEWAY_URL string = enableApiManagement ? apiManagement.outputs.apiManagementGatewayUrl : ''
+output APIMANAGEMENT_DEVELOPER_PORTAL_URL string = enableApiManagement ? apiManagement.outputs.apiManagementDeveloperPortalUrl : ''
+

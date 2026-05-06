@@ -67,6 +67,30 @@
       },
       "existingAppInsightsConnectionName": {
         "value": "${APPLICATIONINSIGHTS_CONNECTION_NAME=}"
+      },
+      "enableApiManagement": {
+        "value": "${ENABLE_API_MANAGEMENT=false}"
+      },
+      "enableAppService": {
+        "value": "${ENABLE_APP_SERVICE=true}"
+      },
+      "appServicePlanSkuName": {
+        "value": "${APPSERVICE_PLAN_SKU_NAME=B1}"
+      },
+      "appServicePlanCapacity": {
+        "value": "${APPSERVICE_PLAN_CAPACITY=1}"
+      },
+      "apiManagementPublisherName": {
+        "value": "${APIMANAGEMENT_PUBLISHER_NAME=API Administrator}"
+      },
+      "apiManagementPublisherEmail": {
+        "value": "${APIMANAGEMENT_PUBLISHER_EMAIL=admin@example.com}"
+      },
+      "apiManagementSkuName": {
+        "value": "${APIMANAGEMENT_SKU_NAME=Consumption}"
+      },
+      "apiManagementSkuCount": {
+        "value": "${APIMANAGEMENT_SKU_COUNT=1}"
       }
     }
 }
